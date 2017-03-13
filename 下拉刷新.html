@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        body{
+            font-size: 40px;
+        }
+        #refreshDiv{
+            height: 0;
+            width: 100%;
+            text-align: center;
+            overflow: hidden;
+            background: goldenrod;
+        }
+    </style>
+</head>
+<body>
+<div id="refreshDiv">下拉刷新</div>
+<div id="inp" type="text"></div>
+</body>
+<script>
+    function load (){
+
+        document.addEventListener('touchstart',touch, false);
+        document.addEventListener('touchmove',touch, false);
+        document.addEventListener('touchend',touch, false);
+
+        function touch (event){
+            var event = event || window.event;
+
+            switch(event.type){
+                case "touchstart":
+                    start(event)
+                    break;
+                case "touchend":
+                    end(event)
+                    break;
+                case "touchmove":
+                   move(event)
+                    break;
+            }
+
+        }
+    }
+    window.addEventListener('load',load, false);
+
+
+    //定义变量
+    var refreshConfig = {
+        refreshHeight:200,
+        startY:0,
+        moveHeight: 100,
+        maxHeight:200,
+        isEndOk:false,
+        isMoveOk:false,
+        showTime:1000,
+        clearInterval:0
+    }
+    //手指开始事件
+    window.start = function (event) {
+        var oInp = document.getElementById("inp");
+        var Y = event.touches[0].clientY
+        if(refreshConfig.refreshHeight >= Y){
+            oInp.innerHTML = Y;
+            refreshConfig.startY = Y
+            refreshConfig.isMoveOk = true
+        }else {
+            refreshConfig.isMoveOk = false
+        }
+
+
+    }
+    //手指移动事件
+    window.move = function (event) {
+        if(refreshConfig.isMoveOk){
+            var oInp = document.getElementById("inp");
+            var rfh =document.getElementById("refreshDiv") ;
+            event.preventDefault();
+            var moveY = event.touches[0].clientY - refreshConfig.startY
+            moveY = moveY > refreshConfig.maxHeight?refreshConfig.maxHeight:moveY
+            oInp.innerHTML = moveY;
+            rfh.style.height = moveY + 'px'
+            if(moveY > refreshConfig.moveHeight){
+                refreshConfig.isEndOk = true
+            }else {
+                refreshConfig.isEndOk = false
+            }
+
+        }
+
+
+    }
+    //手指结束事件
+    window.end = function (event) {
+        var rfh =document.getElementById("refreshDiv") ;
+        if(refreshConfig.isEndOk){
+            var oInp = document.getElementById("inp");
+            oInp.innerHTML = "<br>Touch end (" + event.changedTouches[0].clientX + "," + event.changedTouches[0].clientY + ")";
+            refreshHeightAnimate('refreshDiv',refreshConfig.moveHeight)
+            setTimeout(function () {
+                refreshConfig.isEndOk = false
+                console.log('刷新成功操作')
+                refreshHeightAnimate('refreshDiv',0)
+            },refreshConfig.showTime)
+        }else {
+            refreshHeightAnimate('refreshDiv',0)
+        }
+
+    }
+
+    window.refreshHeightAnimate = function (id,hei) {
+        var el = document.getElementById(id)
+        var height = el.offsetHeight
+        clearInterval(refreshConfig.clearInterval)
+        if(height == 0){
+            return
+        }
+        refreshConfig.clearInterval = setInterval(function () {
+            height = height -2
+            el.style.height = height + 'px'
+            if(height == hei){
+                clearInterval(refreshConfig.clearInterval)
+            }
+        },1)
+    }
+
+</script>
+</html>
